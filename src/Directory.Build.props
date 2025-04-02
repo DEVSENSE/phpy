@@ -1,0 +1,18 @@
+<Project>
+
+	<PropertyGroup>
+
+		<Company>Devsense</Company>
+		<Copyright>(c) Devsense 2025</Copyright>
+		<TargetFramework>net90</TargetFramework>
+
+		<LangVersion>latest</LangVersion>
+		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+		<PredefinedCulturesOnly>false</PredefinedCulturesOnly>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<NoWarn>CS8002</NoWarn>
+		<CheckEolTargetFramework>false</CheckEolTargetFramework>
+
+	</PropertyGroup>
+
+</Project>
