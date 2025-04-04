@@ -20,6 +20,7 @@
     "@types/node": "^22.13.17",
     "esbuild": "^0.25.2",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   }
 }
