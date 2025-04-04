@@ -2,21 +2,24 @@
   "name": "phpa",
   "version": "1.0.0",
   "description": "Devsense PHP Code Analysis CLI",
-  "main": "index.js",
+  "main": "dist/bundle.js",
+  "bin": {
+    "phpa": "./dist/bundle.js"
+  },
   "scripts": {
-    "build": "npx tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node build.js"
   },
   "author": "DEVSENSE",
   "license": "ISC",
   "dependencies": {
-    "commander": "^13.1.0",
-    "figlet": "^1.8.0"
+    "commander": "^13.1.0"
   },
   "keywords": [],
   "devDependencies": {
     "@types/figlet": "^1.7.0",
     "@types/node": "^22.13.17",
+    "esbuild": "^0.25.2",
+    "ts-loader": "^9.5.2",
     "typescript": "^5.8.2"
   }
 }
