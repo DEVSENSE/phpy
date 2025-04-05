@@ -1,26 +1,36 @@
 {
-  "name": "phpa",
-  "version": "1.0.0",
-  "description": "Devsense PHP Code Analysis CLI",
-  "main": "dist/bundle.js",
-  "bin": {
-    "phpa": "./dist/bundle.js"
-  },
-  "scripts": {
-    "build": "node build.js"
-  },
-  "author": "DEVSENSE",
-  "license": "ISC",
-  "dependencies": {
-    "commander": "^13.1.0"
-  },
-  "keywords": [],
-  "devDependencies": {
-    "@types/figlet": "^1.7.0",
-    "@types/node": "^22.13.17",
-    "esbuild": "^0.25.2",
-    "ts-loader": "^9.5.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
-  }
+    "name": "phpa",
+    "version": "1.0.0",
+    "description": "Devsense PHP Code Analysis CLI",
+    "main": "dist/index.js",
+    "bin": {
+        "phpa": "./dist/index.js"
+    },
+    "clean-package": {
+        "remove": [
+            "script",
+            "dependencies",
+            "devDependencies"
+        ]
+    },
+    "scripts": {
+        "start": "npx tsx src/index.ts",
+        "build": "node build.js"
+    },
+    "author": "DEVSENSE",
+    "license": "ISC",
+    "keywords": [],
+    "dependencies": {
+        "commander": "^13.1.0"
+    },
+    "devDependencies": {
+        "@commander-js/extra-typings": "^13.1.0",
+        "@types/node": "^22.13.17",
+        "clean-package": "^2.2.0",
+        "esbuild": "^0.25.2",
+        "ts-loader": "^9.5.2",
+        "ts-node": "^10.9.2",
+        "tsx": "^4.19.3",
+        "typescript": "^5.8.2"
+    }
 }

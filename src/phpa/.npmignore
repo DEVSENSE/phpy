@@ -1,0 +1,5 @@
+src/**
+node_modules/**
+build.js
+package-lock.json
+tsconfig.json

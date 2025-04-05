@@ -9,9 +9,9 @@
             "request": "launch",
             "cwd": "${workspaceFolder}/src/phpa/",
             "runtimeArgs": [
-                "-r",
-                "ts-node/register"
+                "--import=tsx",
             ],
+            "console": "integratedTerminal",
             "args": [
                 "src/index.ts"
             ],
