@@ -15,7 +15,8 @@
     },
     "scripts": {
         "start": "npx tsx src/index.ts",
-        "build": "node build.js"
+        "build-wasm": "dotnet publish ../Devsense.PHP.CodeAnalysis/Devsense.PHP.CodeAnalysis.csproj",
+        "build": "npm run build-wasm && node build.js"
     },
     "author": "DEVSENSE",
     "license": "ISC",
