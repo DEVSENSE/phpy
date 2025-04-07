@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 import { program } from '@commander-js/extra-typings';
-import bootsharp, { Program } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp/types"
+import bootsharp, { Program } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp"
 import { glob, readFileSync } from 'fs';
 
 // bootsharp.boot().then(() => {
