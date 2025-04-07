@@ -4,14 +4,13 @@
         {
             "type": "npm",
             "script": "build",
-            "path": "src/phpa",
+            "path": "src/Devsense.PHP.CodeAnalysis.CLI",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "problemMatcher": [],
-            "label": "npm: build - src/phpa",
-            "detail": "node build.js"
+            "label": "Build Devsense.PHP.CodeAnalysis.CLI"
         }
     ]
 }

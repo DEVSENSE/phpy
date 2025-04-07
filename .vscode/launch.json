@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceFolder}/src/phpa/",
+            "cwd": "${workspaceFolder}/src/Devsense.PHP.CodeAnalysis.CLI/",
             "runtimeArgs": [
                 "--import=tsx",
             ],
@@ -15,7 +15,7 @@
             "args": [
                 "src/index.ts"
             ],
-            "name": "launch phpa",
+            "name": "Devsense.PHP.CodeAnalysis.CLI",
             "skipFiles": [
                 "<node_internals>/**"
             ]
