@@ -94,4 +94,4 @@ async function main(argv: string[]) {
 }
 
 //
-main(['--verbose', ...process.argv])
+main(process.argv)
