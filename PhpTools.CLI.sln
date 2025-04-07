@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35919.96 d17.13
+VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devsense.PHP.CodeAnalysis", "src\Devsense.PHP.CodeAnalysis\Devsense.PHP.CodeAnalysis.csproj", "{B2881D8D-AF2B-F10B-18E2-BDD3E50D1512}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devsense.PHP.Nodes.Implementation", "components\src\Devsense.PHP.Nodes.Implementation\Devsense.PHP.Nodes.Implementation.csproj", "{9C84836C-55F4-E0F3-9823-2B211588161E}"
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Devsense.PHP.CodeAnalysis.CLI", "src\Devsense.PHP.CodeAnalysis.CLI\Devsense.PHP.CodeAnalysis.CLI.esproj", "{945CABF9-76B2-1F63-036B-B9BE67C6A07A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,16 @@ Global
 		{B2881D8D-AF2B-F10B-18E2-BDD3E50D1512}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2881D8D-AF2B-F10B-18E2-BDD3E50D1512}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2881D8D-AF2B-F10B-18E2-BDD3E50D1512}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C84836C-55F4-E0F3-9823-2B211588161E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C84836C-55F4-E0F3-9823-2B211588161E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C84836C-55F4-E0F3-9823-2B211588161E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C84836C-55F4-E0F3-9823-2B211588161E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{945CABF9-76B2-1F63-036B-B9BE67C6A07A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{945CABF9-76B2-1F63-036B-B9BE67C6A07A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{945CABF9-76B2-1F63-036B-B9BE67C6A07A}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{945CABF9-76B2-1F63-036B-B9BE67C6A07A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{945CABF9-76B2-1F63-036B-B9BE67C6A07A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{945CABF9-76B2-1F63-036B-B9BE67C6A07A}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
