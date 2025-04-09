@@ -9,7 +9,7 @@ import { glob, readFileSync } from 'fs';
 //     console.log('helo')
 // })
 
-async function collectFiles(cwd: string, globs: string[], log: Logger): Promise<Record<string, string>> {
+async function globFiles(cwd: string, globs: string[], log: Logger): Promise<string[]> {
     return await new Promise((resolve, reject) => {
         glob( // it's async
             globs,
@@ -20,14 +20,29 @@ async function collectFiles(cwd: string, globs: string[], log: Logger): Promise<
                     reject(err)
                 }
 
-                let files: Record<string, string> = {}
-                matches.forEach(path => {
-                    files[path] = readFileSync(path).toString('utf8')
-                })
-                resolve(files)
+                resolve(matches)
             }
         )
     })
+}
+
+async function readFiles(cwd: string, globs: string[], log: Logger): Promise<Record<string, string>> {
+
+    let files = await globFiles(cwd, globs, log)
+    let contents: Record<string, string> = {}
+
+    //
+    files.forEach(path => {
+        try {
+            contents[path] = readFileSync(path).toString('utf8') // TODO async
+        }
+        catch (e) {
+            log.error(<Error>e)
+        }
+    })
+
+    //
+    return contents
 }
 
 class Logger {
@@ -64,17 +79,24 @@ async function main(argv: string[]) {
         .option('-i, --include <path...>', 'Files or directories (including sub-directories) to be indexed.', ['.'])
         .option('-x, --exclude <path...>', 'Files or directories to be excluded from indexing.')
         .option('--verbose', 'Enable verbose output.')
-        .argument('[path...]', 'Files or directories to be analyzed.', ['**/*.php'])
-        .action(async (paths, options) => {
+        .argument('[path...]', 'Files or directories to be analyzed.')
+        .action(async (paths: string[]|undefined, options) => {
 
             //
             const log = new Logger(options.verbose == true)
             const root = options.root ?? process.cwd()
-            const files = await collectFiles(
+            const included = await readFiles(
                 root,
                 (options.include ?? ['.']).flatMap(path => [path, `${path}/**/*.php`]),
                 log
             )
+            const files = !paths || paths.length == 0 || (paths.length == 1 && paths[0] == '**/*.php')
+                ? Object.keys(included)
+                : await globFiles(
+                    root,
+                    (paths ?? ['**/*.php']).flatMap(path => [path, `${path}/**/*.php`]),
+                    log
+                )
 
             if (options.exclude) {
                 log.notimplemented('exclude')
@@ -82,11 +104,11 @@ async function main(argv: string[]) {
 
             await bootsharp.boot({})
 
-            log.info(`Indexing ${files.length} file(s) ...`)
+            log.info(`Indexing ${Object.keys(included).length} file(s) ...`)
 
             //console.log('done')
-            
-            await Program.analyze(root, files)
+
+            await Program.analyze(root, included, files)
 
             log.info(`Done.`)
         })

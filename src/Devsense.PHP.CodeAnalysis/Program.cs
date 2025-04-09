@@ -36,11 +36,13 @@ public static partial class Program
     //public static partial string GetFrontendName();
 
     [JSInvokable] // Invoked from JS as Program.GetBackendName()
-    public static async Task Analyze(string root, IDictionary<string, string> files)
+    public static async Task Analyze(string root, IDictionary<string, string> included, IEnumerable<string> files)
     {
         using (var project = new MockProject(root))
         {
-            foreach (var pair in files)
+            // parse included files:
+
+            foreach (var pair in included)
             {
                 if (project.ComposerNodesCollection?.TryHandle(pair.Key, false) == true) // first let composer nodes to handle its files
                 {
@@ -53,7 +55,7 @@ public static partial class Program
             // wait for composer packages
             await project.WaitForLoadAsync();
 
-            foreach (var pair in files)
+            foreach (var pair in included)
             {
                 project.Add(pair.Value, pair.Key, out var errors, postponeAnalysis: true/*analyze once all files are parsed*/);
             }
@@ -61,13 +63,20 @@ public static partial class Program
             // analyze and collect diagnostics
             project.AnalyseToDo();
 
-            foreach (var file in project.Files)
+            foreach (var fname in files)
             {
                 // // ignore errors in /vendor/ ... expected
                 // if (project.ComposerNodesCollection?.IsVendorFile(project.ProjectDir, file.FileName, out _, out _))
                 // {
                 //     continue;
                 // }
+
+                var file = project.GetNode(fname);
+                if (file == null)
+                {
+                    Console.WriteLine($"'{fname}' has not been parsed, ignoring ...");
+                    continue;
+                }
 
                 file.Ast.ContainingSourceUnit.TryGetProperty(typeof(CommonError[]), out var errorsObj);
                 if (errorsObj is CommonError[] errors && errors.Length != 0)
