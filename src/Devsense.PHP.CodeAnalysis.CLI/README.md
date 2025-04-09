@@ -6,11 +6,11 @@ Standalone NodeJS command-line utility for analyzing PHP code files.
 
 _Analyze .php files in current directory:_
 
-> phpa
+> phpy
 
 _Read `.php.` files in `src` and `vendor`, and analyze only files in `src`:_
 
-> phpa --include "src" "vendor" -- "src"
+> phpy --include "src" "vendor" -- "src"
 
 ## Background
 

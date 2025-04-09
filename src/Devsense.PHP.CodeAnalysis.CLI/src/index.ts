@@ -57,7 +57,7 @@ async function main(argv: string[]) {
 
     await program
         .version('1.0.0')
-        .name('phpa')
+        .name('phpy')
         .description('PHP Code Analysis Tool')
         .showHelpAfterError(true)
         .option('-r, --root <path>', 'Root directory, to which are other parameters relative. Current working directory by default.')

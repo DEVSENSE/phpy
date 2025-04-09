@@ -1,10 +1,10 @@
 {
-    "name": "phpa",
+    "name": "phpy",
     "version": "1.0.0",
     "description": "Devsense PHP Code Analysis CLI",
     "main": "dist/index.js",
     "bin": {
-        "phpa": "./dist/index.js"
+        "phpy": "./dist/index.js"
     },
     "clean-package": {
         "remove": [
