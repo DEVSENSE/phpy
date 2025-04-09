@@ -2,7 +2,8 @@
 
 import { program } from '@commander-js/extra-typings';
 import bootsharp, { Program } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp"
-import { glob, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
+import { glob } from 'glob';
 
 // bootsharp.boot().then(() => {
 //     //console.log(Program.getBackendName());
@@ -10,20 +11,15 @@ import { glob, readFileSync } from 'fs';
 // })
 
 async function globFiles(cwd: string, globs: string[], log: Logger): Promise<string[]> {
-    return await new Promise((resolve, reject) => {
-        glob( // it's async
-            globs,
-            { cwd: cwd, },
-            (err, matches) => {
-                if (err) {
-                    log.error(err)
-                    reject(err)
-                }
-
-                resolve(matches)
-            }
-        )
-    })
+    return (await glob(
+        globs,
+        {
+            cwd: cwd,
+            withFileTypes: true
+        }
+    ))
+    .filter(file => file.isFile())
+    .map(file => file.fullpath())
 }
 
 async function readFiles(cwd: string, globs: string[], log: Logger): Promise<Record<string, string>> {
@@ -80,7 +76,7 @@ async function main(argv: string[]) {
         .option('-x, --exclude <path...>', 'Files or directories to be excluded from indexing.')
         .option('--verbose', 'Enable verbose output.')
         .argument('[path...]', 'Files or directories to be analyzed.')
-        .action(async (paths: string[]|undefined, options) => {
+        .action(async (paths: string[] | undefined, options) => {
 
             //
             const log = new Logger(options.verbose == true)
