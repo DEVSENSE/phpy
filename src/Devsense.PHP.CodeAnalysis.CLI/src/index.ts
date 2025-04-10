@@ -114,9 +114,9 @@ async function main(argv: string[]) {
                 log.notimplemented('exclude')
             }
 
-            log.info(`Analyzing ${filesToAnalyze.length} file(s) ...`)
+            //log.info(`Analyzing ${filesToAnalyze.length} file(s) ...`)
             for (const fpath of filesToAnalyze) {
-                log.info(`Analyzing ${fpath} ...`)
+                //log.info(`Analyzing ${fpath} ...`)
                 Project.analyseFile(fpath)
             }
 
