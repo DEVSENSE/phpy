@@ -1,8 +1,8 @@
 #! /usr/bin/env node
 
 import { program } from '@commander-js/extra-typings';
-import bootsharp, { Program } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp"
-import { readFileSync } from 'fs';
+import bootsharp, { Program, Project } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp"
+import { readFile, readFileSync } from 'fs';
 import { glob } from 'glob';
 
 // bootsharp.boot().then(() => {
@@ -18,27 +18,8 @@ async function globFiles(cwd: string, globs: string[], log: Logger): Promise<str
             withFileTypes: true
         }
     ))
-    .filter(file => file.isFile())
-    .map(file => file.fullpath())
-}
-
-async function readFiles(cwd: string, globs: string[], log: Logger): Promise<Record<string, string>> {
-
-    let files = await globFiles(cwd, globs, log)
-    let contents: Record<string, string> = {}
-
-    //
-    files.forEach(path => {
-        try {
-            contents[path] = readFileSync(path).toString('utf8') // TODO async
-        }
-        catch (e) {
-            log.error(<Error>e)
-        }
-    })
-
-    //
-    return contents
+        .filter(file => file.isFile())
+        .map(file => file.fullpath())
 }
 
 class Logger {
@@ -64,6 +45,21 @@ class Logger {
     }
 }
 
+function addFileToProject(path: string, log: Logger) {
+    return new Promise((resolve, reject) => {
+        readFile(path, (err, data) => {
+            if (err) {
+                log.error(err)
+                reject(err)
+            }
+            else {
+                Project.addFile(path, data.toString('utf-8'))
+                resolve(true)
+            }
+        })
+    })
+}
+
 async function main(argv: string[]) {
 
     await program
@@ -81,13 +77,33 @@ async function main(argv: string[]) {
             //
             const log = new Logger(options.verbose == true)
             const root = options.root ?? process.cwd()
-            const included = await readFiles(
+
+            log.info(`Starting ...`)
+
+            await bootsharp.boot({})
+            await Project.initialize(root)
+
+            log.info(`Reading files ...`)
+
+            //
+            let readPromises = []
+            let allFiles = []
+            for (const fpath of await globFiles(
                 root,
                 (options.include ?? ['.']).flatMap(path => [path, `${path}/**/*.php`]),
-                log
-            )
-            const files = !paths || paths.length == 0 || (paths.length == 1 && paths[0] == '**/*.php')
-                ? Object.keys(included)
+                log)) {
+
+                allFiles.push(fpath)
+                readPromises.push(addFileToProject(fpath, log))
+            }
+            await Promise.all(readPromises)
+
+            log.info(`${allFiles.length} file(s) parsed.`)
+
+            //
+
+            const filesToAnalyze = !paths || paths.length == 0 || (paths.length == 1 && paths[0] == '**/*.php')
+                ? allFiles
                 : await globFiles(
                     root,
                     (paths ?? ['**/*.php']).flatMap(path => [path, `${path}/**/*.php`]),
@@ -98,15 +114,14 @@ async function main(argv: string[]) {
                 log.notimplemented('exclude')
             }
 
-            await bootsharp.boot({})
-
-            log.info(`Indexing ${Object.keys(included).length} file(s) ...`)
-
-            //console.log('done')
-
-            await Program.analyze(root, included, files)
+            log.info(`Analyzing ${filesToAnalyze.length} file(s) ...`)
+            for (const fpath of filesToAnalyze) {
+                log.info(`Analyzing ${fpath} ...`)
+                Project.analyseFile(fpath)
+            }
 
             log.info(`Done.`)
+            process.exit(0)
         })
         .parseAsync(argv)
 }
