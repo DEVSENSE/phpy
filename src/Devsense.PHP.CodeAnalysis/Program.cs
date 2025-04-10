@@ -38,53 +38,52 @@ public static partial class Program
     [JSInvokable] // Invoked from JS as Program.GetBackendName()
     public static async Task Analyze(string root, IDictionary<string, string> included, IEnumerable<string> files)
     {
-        using (var project = new MockProject(root))
+        using var project = new MockProject(root);
+
+        // parse included files:
+
+        foreach (var pair in included)
         {
-            // parse included files:
-
-            foreach (var pair in included)
+            if (project.ComposerNodesCollection?.TryHandle(pair.Key, false) == true) // first let composer nodes to handle its files
             {
-                if (project.ComposerNodesCollection?.TryHandle(pair.Key, false) == true) // first let composer nodes to handle its files
-                {
-                    // userfiles.Add(
-                    //     (fullpath, File.ReadAllText(fullpath))
-                    // );
-                }
+                // userfiles.Add(
+                //     (fullpath, File.ReadAllText(fullpath))
+                // );
+            }
+        }
+
+        // wait for composer packages
+        await project.WaitForLoadAsync();
+
+        foreach (var pair in included)
+        {
+            project.Add(pair.Value, pair.Key, out var errors, postponeAnalysis: true/*analyze once all files are parsed*/);
+        }
+
+        // analyze and collect diagnostics
+        project.AnalyseToDo();
+
+        foreach (var fname in files)
+        {
+            // // ignore errors in /vendor/ ... expected
+            // if (project.ComposerNodesCollection?.IsVendorFile(project.ProjectDir, file.FileName, out _, out _))
+            // {
+            //     continue;
+            // }
+
+            var file = project.GetNode(fname);
+            if (file == null)
+            {
+                Console.WriteLine($"'{fname}' has not been parsed, ignoring ...");
+                continue;
             }
 
-            // wait for composer packages
-            await project.WaitForLoadAsync();
-
-            foreach (var pair in included)
+            file.Ast.ContainingSourceUnit.TryGetProperty(typeof(CommonError[]), out var errorsObj);
+            if (errorsObj is CommonError[] errors && errors.Length != 0)
             {
-                project.Add(pair.Value, pair.Key, out var errors, postponeAnalysis: true/*analyze once all files are parsed*/);
-            }
-
-            // analyze and collect diagnostics
-            project.AnalyseToDo();
-
-            foreach (var fname in files)
-            {
-                // // ignore errors in /vendor/ ... expected
-                // if (project.ComposerNodesCollection?.IsVendorFile(project.ProjectDir, file.FileName, out _, out _))
-                // {
-                //     continue;
-                // }
-
-                var file = project.GetNode(fname);
-                if (file == null)
+                foreach (var error in errors)
                 {
-                    Console.WriteLine($"'{fname}' has not been parsed, ignoring ...");
-                    continue;
-                }
-
-                file.Ast.ContainingSourceUnit.TryGetProperty(typeof(CommonError[]), out var errorsObj);
-                if (errorsObj is CommonError[] errors && errors.Length != 0)
-                {
-                    foreach (var error in errors)
-                    {
-                        Console.WriteLine($"[{error.ErrorInfo.ErrorCode}] {error} at {file.FileName}:{file.Ast.ContainingSourceUnit.GetLineFromPosition(error.Span.Start)}");
-                    }
+                    Console.WriteLine($"[{error.ErrorInfo.ErrorCode}] {error} at {file.FileName}:{file.Ast.ContainingSourceUnit.GetLineFromPosition(error.Span.Start)}");
                 }
             }
         }
