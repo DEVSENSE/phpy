@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 import { program } from '@commander-js/extra-typings';
-import bootsharp, { Program, Project } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp"
+import bootsharp, { Project } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp"
 import { readFile, readFileSync } from 'fs';
 import { glob } from 'glob';
 
