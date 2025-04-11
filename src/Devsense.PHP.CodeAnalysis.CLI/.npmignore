@@ -1,5 +1,7 @@
 src/**
+test/**/*
 node_modules/**
 build.js
 package-lock.json
-tsconfig.json
+*config.json
+*.esproj
