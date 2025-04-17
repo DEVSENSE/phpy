@@ -2,24 +2,26 @@
 
 import { program } from '@commander-js/extra-typings';
 import bootsharp, { Project } from "../../Devsense.PHP.CodeAnalysis/bin/bootsharp"
-import { readFile, readFileSync } from 'fs';
-import { glob } from 'glob';
+import { Dirent, readFile } from 'fs';
+import { Glob, glob } from 'glob';
+import { minimatch } from 'minimatch';
+import { showProgress } from './progress';
 
-// bootsharp.boot().then(() => {
-//     //console.log(Program.getBackendName());
-//     console.log('helo')
-// })
-
-async function globFiles(cwd: string, globs: string[], log: Logger): Promise<string[]> {
-    return (await glob(
+async function globHelper(cwd: string, globs: string[], ignore: string[] | undefined, log: Logger, callback: (fullpath: string) => void) {
+    const g = new Glob(
         globs,
         {
             cwd: cwd,
-            withFileTypes: true
+            withFileTypes: true,
+            ignore: ignore
         }
-    ))
-        .filter(file => file.isFile())
-        .map(file => file.fullpath())
+    )
+
+    for await (const ent of g.iterate()) {
+        if (ent.isFile()) {
+            callback(ent.fullpath())
+        }
+    }
 }
 
 class Logger {
@@ -45,8 +47,8 @@ class Logger {
     }
 }
 
-function addFileToProject(path: string, log: Logger) {
-    return new Promise((resolve, reject) => {
+async function addFileToProject(path: string, log: Logger) {
+    await new Promise((resolve, reject) => {
         readFile(path, (err, data) => {
             if (err) {
                 log.error(err)
@@ -86,33 +88,30 @@ async function main(argv: string[]) {
             log.info(`Reading files ...`)
 
             //
-            let readPromises = []
-            let allFiles = []
-            for (const fpath of await globFiles(
+            let readPromises: Promise<unknown>[] = []
+            let allFiles: string[] = []
+
+            await globHelper(
                 root,
-                (options.include ?? ['.']).flatMap(path => [path, `${path}/**/*.php`]),
-                log)) {
+                (options.include ?? ['.']).flatMap(path => [path, `${path}/**/*.php`, `${path}/**/*.phar`]),
+                options.exclude,
+                log,
+                fpath => {
+                    allFiles.push(fpath)
+                }
+            )
 
-                allFiles.push(fpath)
-                readPromises.push(addFileToProject(fpath, log))
-            }
-            await Promise.all(readPromises)
-
-            log.info(`${allFiles.length} file(s) parsed.`)
+            await showProgress(allFiles.map(fpath => () => addFileToProject(fpath, log)))
 
             //
 
-            const filesToAnalyze = !paths || paths.length == 0 || (paths.length == 1 && paths[0] == '**/*.php')
+            const filesToAnalyze = !paths || paths.length == 0 || (paths.length == 1 && paths[0] == '**/*')
                 ? allFiles
-                : await globFiles(
-                    root,
-                    (paths ?? ['**/*.php']).flatMap(path => [path, `${path}/**/*.php`]),
-                    log
+                : allFiles.filter(
+                    fpath => paths.filter(
+                        pattern => minimatch(fpath, pattern, {})
+                    ).length // any()
                 )
-
-            if (options.exclude) {
-                log.notimplemented('exclude')
-            }
 
             //log.info(`Analyzing ${filesToAnalyze.length} file(s) ...`)
             for (const fpath of filesToAnalyze) {
