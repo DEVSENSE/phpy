@@ -5,4 +5,6 @@ node_modules/**
 build.js
 package-lock.json
 *config.json
+*config.js
 *.esproj
+*.backup
