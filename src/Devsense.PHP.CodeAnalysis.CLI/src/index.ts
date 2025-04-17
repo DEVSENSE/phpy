@@ -65,7 +65,7 @@ async function addFileToProject(path: string, log: Logger) {
 async function main(argv: string[]) {
 
     await program
-        .version('1.0.0')
+        .version('0.0.2')
         .name('phpy')
         .description('PHP Code Analysis Tool')
         .showHelpAfterError(true)
