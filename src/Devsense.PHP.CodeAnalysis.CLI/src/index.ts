@@ -5,7 +5,7 @@ import bootsharp, { Project } from "../../Devsense.PHP.CodeAnalysis/bin/bootshar
 import { Dirent, readFile } from 'fs';
 import { Glob, glob } from 'glob';
 import { minimatch } from 'minimatch';
-import { showProgress } from './progress';
+import { DefaultConcurrency, showProgress } from './progress';
 
 async function globHelper(cwd: string, globs: string[], ignore: string[] | undefined, log: Logger, callback: (fullpath: string) => void) {
     const g = new Glob(
@@ -72,6 +72,7 @@ async function main(argv: string[]) {
         .option('-r, --root <path>', 'Root directory, to which are other parameters relative. Current working directory by default.')
         .option('-i, --include <path...>', 'Files or directories (including sub-directories) to be indexed.', ['.'])
         .option('-x, --exclude <path...>', 'Files or directories to be excluded from indexing.')
+        .option('-c, --concurrency <N>', 'Number of files being read in parallel.', str => parseInt(str), DefaultConcurrency)
         .option('--verbose', 'Enable verbose output.')
         .argument('[path...]', 'Files or directories to be analyzed.')
         .action(async (paths: string[] | undefined, options) => {
@@ -101,7 +102,7 @@ async function main(argv: string[]) {
                 }
             )
 
-            await showProgress(allFiles.map(fpath => () => addFileToProject(fpath, log)))
+            await showProgress(allFiles.map(fpath => () => addFileToProject(fpath, log)), options.concurrency)
 
             //
 

@@ -2,6 +2,8 @@ import readline from 'readline';
 
 const spinnerFrames = ['-', '\\', '|', '/'];
 
+export const DefaultConcurrency = 8
+
 function formatTime(ms: number): string {
     const s = Math.floor(ms / 1000);
     const m = Math.floor(s / 60);
@@ -14,9 +16,13 @@ class Progress {
     constructor(public readonly total: number) { }
 }
 
-async function worker(promisesFn: (() => Promise<unknown>)[], concurrency: number = 8, progress: Progress) {
+async function worker(promisesFn: (() => Promise<unknown>)[], concurrency: number = DefaultConcurrency, progress: Progress) {
     let pending: Promise<unknown>[] = [] // active promises
     //let semaphore = new Promise(r => );
+
+    if (typeof (concurrency) != 'number' || !concurrency || concurrency <= 0) {
+        concurrency = DefaultConcurrency
+    }
 
     while (promisesFn.length) {
 
@@ -43,7 +49,7 @@ async function worker(promisesFn: (() => Promise<unknown>)[], concurrency: numbe
     await Promise.all(pending)
 }
 
-export async function showProgress(promisesFn: (() => Promise<unknown>)[], concurrency: number = 8) {
+export async function showProgress(promisesFn: (() => Promise<unknown>)[], concurrency: number = DefaultConcurrency) {
     let progress = new Progress(promisesFn.length)
     let frameIndex = 0;
     const startTime = Date.now();
