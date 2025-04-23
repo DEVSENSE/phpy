@@ -47,7 +47,7 @@ class Logger {
     }
 }
 
-async function addFileToProject(path: string, log: Logger) {
+async function addFileToProject(path: string, enc: string, log: Logger) {
     await new Promise((resolve, reject) => {
         readFile(path, (err, data) => {
             if (err) {
@@ -55,7 +55,12 @@ async function addFileToProject(path: string, log: Logger) {
                 reject(err)
             }
             else {
-                Project.addFile(path, data.toString('utf-8'))
+                if (path.endsWith('.phar')) {
+                    Project.addPharFile(path, data)
+                }
+                else {
+                    Project.addFile(path, data.toString(enc ?? 'utf-8'))
+                }
                 resolve(true)
             }
         })
@@ -65,7 +70,7 @@ async function addFileToProject(path: string, log: Logger) {
 async function main(argv: string[]) {
 
     await program
-        .version('0.0.2')
+        .version('0.0.3')
         .name('phpy')
         .description('PHP Code Analysis Tool')
         .showHelpAfterError(true)
@@ -73,6 +78,7 @@ async function main(argv: string[]) {
         .option('-i, --include <path...>', 'Files or directories (including sub-directories) to be indexed.', ['.'])
         .option('-x, --exclude <path...>', 'Files or directories to be excluded from indexing.')
         .option('-c, --concurrency <N>', 'Number of files being read in parallel.', str => parseInt(str), DefaultConcurrency)
+        .option('--encoding <enc>', 'Encoding used for source files.', 'utf-8')
         .option('--verbose', 'Enable verbose output.')
         .argument('[path...]', 'Files or directories to be analyzed.')
         .action(async (paths: string[] | undefined, options) => {
@@ -102,7 +108,7 @@ async function main(argv: string[]) {
                 }
             )
 
-            await showProgress(allFiles.map(fpath => () => addFileToProject(fpath, log)), options.concurrency)
+            await showProgress(allFiles.map(fpath => () => addFileToProject(fpath, options.encoding, log)), options.concurrency)
 
             //
 

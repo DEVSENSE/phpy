@@ -48,6 +48,12 @@ public static partial class Project
     }
 
     [JSInvokable]
+    public static void AddPharFile(string fname, byte[] content)
+    {
+        //_project.Add(code, fname, out var errors);
+    }
+
+    [JSInvokable]
     public static void AnalyseFile(string fname)
     {
         var file = _project.GetNode(fname);
