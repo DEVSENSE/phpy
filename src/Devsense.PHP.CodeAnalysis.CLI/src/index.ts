@@ -47,7 +47,7 @@ class Logger {
     }
 }
 
-async function addFileToProject(path: string, enc: string, log: Logger) {
+async function addFileToProject(path: string, enc: BufferEncoding, log: Logger) {
     await new Promise((resolve, reject) => {
         readFile(path, (err, data) => {
             if (err) {
@@ -78,7 +78,7 @@ async function main(argv: string[]) {
         .option('-i, --include <path...>', 'Files or directories (including sub-directories) to be indexed.', ['.'])
         .option('-x, --exclude <path...>', 'Files or directories to be excluded from indexing.')
         .option('-c, --concurrency <N>', 'Number of files being read in parallel.', str => parseInt(str), DefaultConcurrency)
-        .option('--encoding <enc>', 'Encoding used for source files.', 'utf-8')
+        .option('--encoding <enc>', 'Encoding used for source files.', str => <BufferEncoding>str, 'utf-8')
         .option('--verbose', 'Enable verbose output.')
         .argument('[path...]', 'Files or directories to be analyzed.')
         .action(async (paths: string[] | undefined, options) => {

@@ -16,6 +16,9 @@ using PHP.VisualStudio.Language.Ast;
 using PHP.VisualStudio.Language.Nodes.Project;
 using System.IO;
 using Devsense.PHP.Text;
+using Devsense.PHP.Phar;
+using Devsense.PHP.Syntax.Ast;
+using Devsense.PHP.Nodes;
 
 public static partial class Project
 {
@@ -50,7 +53,7 @@ public static partial class Project
     [JSInvokable]
     public static void AddPharFile(string fname, byte[] content)
     {
-        //_project.Add(code, fname, out var errors);
+        _project.Add(PharFile.OpenPharFile(new MemoryStream(content), fname));
     }
 
     [JSInvokable]
@@ -129,6 +132,32 @@ class MockProject : ProjectContainer
 #pragma warning restore CS0067
     }
 
+    internal class PharFilesReferences : IProjectReferences
+    {
+        readonly IProject _project;
+
+        public PharFilesReferences(IProject project)
+        {
+            _project = project;
+        }
+
+        public IReadOnlyList<MockPharProject> PharFiles => _pharFiles;
+
+        readonly List<MockPharProject> _pharFiles = new List<MockPharProject>();
+
+        public void Add(MockPharProject project)
+        {
+            _pharFiles.Add(project ?? throw new ArgumentNullException(nameof(project)));
+            ReferencesChanged?.Invoke(this, new RefrencesChangedEventArgs(_project));
+        }
+
+        public IEnumerable<IReference> References => _pharFiles;
+
+#pragma warning disable CS0067
+        public event EventHandler<RefrencesChangedEventArgs> ReferencesChanged;
+#pragma warning restore CS0067
+    }
+
     public override string ProjectName => "PROJECT";
 
     public override string ProjectDir { get; }
@@ -143,6 +172,7 @@ class MockProject : ProjectContainer
     {
         yield return new ProjectManualReferences(); // references with PHP manual 
         yield return new ComposerReferencesProvider().GetReferences(this);
+        yield return _pharReferences;
     }
 
     public async Task WaitForLoadAsync(CancellationToken cancellation = default)
@@ -172,10 +202,13 @@ class MockProject : ProjectContainer
     // analyze after each file is added, so other tables could be updated and analysis runs in order
     private HashSet<GlobalCodeNode> _todo_analysis = new HashSet<GlobalCodeNode>();
 
+    private PharFilesReferences _pharReferences;
+
     public MockProject(string dir = null, bool enableComposerNodes = false)
     {
         this.ProjectDir = dir;
         this.EnableComposerNodes = enableComposerNodes;
+        _pharReferences = new PharFilesReferences(this);
 
         // force initialize framework providers
         this.UpdateFrameworks();
@@ -202,6 +235,16 @@ class MockProject : ProjectContainer
         ((IPropertyCollection)node.Ast.ContainingSourceUnit)
             .GetProperty<CommonError[]>()
         ?? Array.Empty<CommonError>();
+
+    public void Add(PharFile phar)
+    {
+        if (phar != null)
+        {
+            _pharReferences.Add(
+                new MockPharProject(phar)
+            );
+        }
+    }
 
     /// <summary>
     /// Parse and add file to the project.
@@ -257,4 +300,41 @@ class MockProject : ProjectContainer
 
         return node;
     }
+}
+
+class MockPharProject : PharProjectContainer
+{
+    sealed class PharEntryFileInfo : IFileInfo
+    {
+        public string FileName { get; set; }
+
+        public string Code { get; set; }
+
+        public GlobalCode Ast => null;
+
+        public IProject Project { get; set; }
+
+        public IFunctionNode[] Functions => EmptyArray<IFunctionNode>.Instance;
+
+        public IConstantNode[] Constants => EmptyArray<IConstantNode>.Instance;
+
+        public ITypeNode[] Types => EmptyArray<ITypeNode>.Instance;
+    }
+
+    public MockPharProject(PharFile file) : base(file)
+    {
+        Initialize(file);
+    }
+
+    protected override IFileInfo CreateNode(string entryPath, string fakeFullPath, string code)
+    {
+        return new PharEntryFileInfo()
+        {
+            FileName = fakeFullPath,
+            Code = code,
+            Project = this,
+        };
+    }
+
+    protected override string GetContent(IFileInfo node) => (node as PharEntryFileInfo)?.Code;
 }
