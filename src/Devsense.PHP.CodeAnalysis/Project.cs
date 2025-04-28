@@ -19,6 +19,9 @@ using Devsense.PHP.Text;
 using Devsense.PHP.Phar;
 using Devsense.PHP.Syntax.Ast;
 using Devsense.PHP.Nodes;
+using Devsense.PHP.ControlFlow;
+using PHP.VisualStudio.Language.Nodes.Helpers;
+using PHP.VisualStudio.Language.Nodes.Frameworks.Laravel;
 
 public static partial class Project
 {
@@ -45,9 +48,29 @@ public static partial class Project
     }
 
     [JSInvokable]
-    public static void AddFile(string fname, string code)
+    public static void AddSourceFile(string fname, string code)
     {
+        if (_project.ComposerNodesCollection?.TryHandle(fname, false) == true)
+        {
+            // 
+        }
+
         _project.Add(code, fname, out var errors);
+    }
+
+    [JSInvokable]
+    public static bool AddConfigFile(string fname, string content)
+    {
+        // ide.json
+        if (PathUtils.GetFileName(fname.AsSpan()).Equals("ide.json".AsSpan(), StringComparison.Ordinal))
+        {
+            return _project.TryGetFramework<ILaravelFramework>()?.AddIdeJson(fname, content) == true;
+        }
+
+        // phpstan.neon
+        // ...
+
+        return false;
     }
 
     [JSInvokable]
@@ -77,41 +100,6 @@ public static partial class Project
             }
         }
     }
-
-    [JSInvokable] // Invoked from JS as Program.GetBackendName()
-    public static async Task Analyze(string root, IDictionary<string, string> included, IEnumerable<string> files)
-    {
-        // parse included files:
-
-        foreach (var pair in included)
-        {
-            if (_project.ComposerNodesCollection?.TryHandle(pair.Key, false) == true) // first let composer nodes to handle its files
-            {
-                // userfiles.Add(
-                //     (fullpath, File.ReadAllText(fullpath))
-                // );
-            }
-        }
-
-        // wait for composer packages
-        await _project.WaitForLoadAsync();
-
-        foreach (var pair in included)
-        {
-            AddFile(pair.Key, pair.Value);
-        }
-
-        foreach (var fname in files)
-        {
-            // // ignore errors in /vendor/ ... expected
-            // if (project.ComposerNodesCollection?.IsVendorFile(project.ProjectDir, file.FileName, out _, out _))
-            // {
-            //     continue;
-            // }
-
-            AnalyseFile(fname);
-        }
-    }
 }
 
 class MockProject : ProjectContainer
@@ -122,6 +110,8 @@ class MockProject : ProjectContainer
     }
 
     protected override bool ContentServiceCanWatch => false; // not needed // not supported on nodeJS
+
+    protected override IProjectFolderContentService ContentService => null; // no file-system
 
     internal class ProjectManualReferences : IProjectReferences
     {

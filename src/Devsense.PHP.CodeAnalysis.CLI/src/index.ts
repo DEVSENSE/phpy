@@ -58,8 +58,16 @@ async function addFileToProject(path: string, enc: BufferEncoding, log: Logger) 
                 if (path.endsWith('.phar')) {
                     Project.addPharFile(path, data)
                 }
+                else if (path.endsWith('.json') || path.endsWith('.neon')) {
+                    // some configuration
+                    // ide.json ?
+                    // phpstan.neon ?
+                    if (Project.addConfigFile(path, data.toString('utf-8')) == false) {
+                        log.info(`${path} was not processed.`)
+                    }
+                }
                 else {
-                    Project.addFile(path, data.toString(enc ?? 'utf-8'))
+                    Project.addSourceFile(path, data.toString(enc ?? 'utf-8'))
                 }
                 resolve(true)
             }
@@ -95,12 +103,11 @@ async function main(argv: string[]) {
             log.info(`Reading files ...`)
 
             //
-            let readPromises: Promise<unknown>[] = []
             let allFiles: string[] = []
 
             await globHelper(
                 root,
-                (options.include ?? ['.']).flatMap(path => [path, `${path}/**/*.php`, `${path}/**/*.phar`]),
+                (options.include ?? ['.']).flatMap(path => [path, `${path}/**/*.php`, `${path}/**/*.phar`]).concat(['**/ide.json']),
                 options.exclude,
                 log,
                 fpath => {
