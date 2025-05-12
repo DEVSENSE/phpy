@@ -15,15 +15,11 @@
         ]
     },
     "scripts": {
-        
         "start": "npx tsx src/index.ts",
-        
         "prepack": "clean-package",
         "postpack": "clean-package restore",
-
         "build-wasm": "dotnet publish ../Devsense.PHP.CodeAnalysis/Devsense.PHP.CodeAnalysis.csproj",
         "build": "npm run build-wasm && node build.js"
-
     },
     "author": "DEVSENSE",
     "license": "ISC",
@@ -37,8 +33,10 @@
     ],
     "dependencies": {
         "commander": "^13.1.0",
+        "devsense-php-ls": "^1.0.17287",
         "glob": "^11.0.1",
-        "minimatch": "^10.0.1"
+        "minimatch": "^10.0.1",
+        "vscode-jsonrpc": "^8.2.1"
     },
     "devDependencies": {
         "@commander-js/extra-typings": "^13.1.0",

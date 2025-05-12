@@ -4,13 +4,13 @@
         {
             "type": "npm",
             "script": "build",
-            "path": "src/Devsense.PHP.CodeAnalysis.CLI",
+            "path": "${workspaceFolder}",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "problemMatcher": [],
-            "label": "Build Devsense.PHP.CodeAnalysis.CLI"
+            "label": "Build"
         }
     ]
 }
