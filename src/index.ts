@@ -4,7 +4,6 @@ import { Dirent, readFile } from 'fs';
 import { Glob, glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { progress } from './progress';
-import { Devsense } from 'devsense-php-ls';
 import { spawn } from 'child_process';
 import { program } from 'commander';
 import { arch, platform } from 'os';
@@ -79,7 +78,7 @@ async function main(argv: string[]) {
 
             const indexing = new Promise(resolve => {
                 let loadingProgressBar = progress()
-                client.onLoadStatus(status => {
+                let onLoadStatus = client.onLoadStatus(status => {
                     if (status.isLoadPending == false && status.pendingAnalysis == 0 && status.pendingParse == 0) {
                         loadingProgressBar.done()
                         resolve(true)
@@ -89,27 +88,36 @@ async function main(argv: string[]) {
                             status.totalFiles - Math.max(status.pendingAnalysis, status.pendingParse),
                             status.totalFiles
                         )
+                        //onLoadStatus[Symbol.dispose]()
                     }
                 })
             })
 
-            await client.start(root, options.include, options.exclude, '8.4')
-            await indexing
-            await client.loaded
-
-            // output diagnostics
-            client.diagnostics.forEach((diagnostics, file) => {
-                if (diagnostics) {
-                    diagnostics.forEach(diagnostic => {
-                        console.log(`${file}(${diagnostic.range.start.line + 1}, ${diagnostic.range.start.character + 1}): ${diagnostic.message}`)
-                    })
-                }
+            let receiving = true
+            //let diagnostics = 0
+            client.onDiagnostics(diagnostic => {
+                receiving = true
+                //path.relative(root, file)
+                console.log(`${diagnostic.uri}(${diagnostic.range.start.line + 1}, ${diagnostic.range.start.character + 1}): ${diagnostic.message}`)
+                //diagnostics++
             })
 
-            //
-            log.info(`Done.`)
-            await client.exit()
-            process.exit(0)
+            await client.start(root, options.include, options.exclude, '8.4')
+            await indexing
+
+            // 
+
+            setInterval(async () => {
+
+                if (receiving) {
+                    receiving = false
+                }
+                else {
+                    //console.log(`${diagnostics} problem(s).`)
+                    await client.exit()
+                    process.exit(0)
+                }
+            }, 2000)
         })
         .parseAsync(argv)
 }

@@ -3,11 +3,12 @@ import { arch, platform } from 'os';
 import path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { EventEmitter } from './event';
+import { Devsense } from 'devsense-php-ls';
 
 namespace LSP {
 
     export interface DevsenseLoadStatus { totalFiles: number, pendingParse: number, pendingAnalysis: number, isLoadPending: boolean, }
-    export interface Diagnostic { range: any, code: string, message: string, severity: number, }
+    export interface Diagnostic { uri?: string, range: any, code: string, message: string, severity: number, }
 
     export const devsenseLoadStatus = new rpc.NotificationType<DevsenseLoadStatus>('devsense/loadStatus')
     export const initialize = new rpc.RequestType<any, any, any>('initialize')
@@ -24,24 +25,21 @@ export class LanguageClient {
 
     private initresponse: any
 
-    private readonly diagnosticsMap: Map<string, LSP.Diagnostic[]> = new Map<string, LSP.Diagnostic[]>()
-
-    public get diagnostics() { return this.diagnosticsMap }
-
-    private loadedFn: (value: boolean) => void = () => { }
-    public readonly loaded: Promise<boolean> = new Promise((resolve => { this.loadedFn = resolve }))
-    private loadedTimer: NodeJS.Timeout | undefined = undefined
-
     public onLoadStatus(listener: (e: LSP.DevsenseLoadStatus) => any): Disposable {
         return this.loadStatusEvent.on(listener)
     }
 
+    public onDiagnostics(listener: (e: LSP.Diagnostic) => any): Disposable {
+        return this.diagnosticEvent.on(listener)
+    }
+
     private readonly loadStatusEvent: EventEmitter<LSP.DevsenseLoadStatus> = new EventEmitter<LSP.DevsenseLoadStatus>()
+    private readonly diagnosticEvent: EventEmitter<LSP.Diagnostic> = new EventEmitter<LSP.Diagnostic>()
 
     constructor(
     ) {
         //const lspath = Devsense.PHP.LS.languageServerPath()
-        const lspath = `node_modules/devsense-php-ls-${platform()}-${arch()}/dist/devsense.php.ls.exe`
+        const lspath = `${__dirname}/../node_modules/devsense-php-ls-${platform()}-${arch()}/dist/devsense.php.ls.exe`
         const lsprocess = spawn(path.resolve(lspath), [], {
             shell: true,
             stdio: ['pipe', 'pipe', 'pipe', 'pipe']
@@ -60,15 +58,14 @@ export class LanguageClient {
             new rpc.StreamMessageReader(lsprocess.stdout),
             new rpc.StreamMessageWriter(lsprocess.stdin)
         )
-
     }
 
     async start(root: string, include: string[], exclude: string[] | undefined, phpVersion: string = '8.4') {
 
-        this.connection.onNotification(LSP.devsenseLoadStatus, args => {
+        this.connection.onNotification(LSP.devsenseLoadStatus, async (args) => {
             this.loadStatusEvent.fire(args)
-            if (this.loadedTimer == undefined && args.isLoadPending == false && args.pendingAnalysis == 0 && args.pendingParse == 0) {
-                this.loadedTimer = setTimeout(() => this.loadedFn(true), 2500)
+            if (args.isLoadPending == false && args.pendingAnalysis == 0 && args.pendingParse == 0) {
+                await this.connection.sendNotification('workspace/diagnostics')
             }
         })
         this.connection.onNotification(LSP.windowShowMessage, args => {
@@ -80,8 +77,12 @@ export class LanguageClient {
         this.connection.onNotification(LSP.telemetryEvent, args => {
         })
         this.connection.onNotification(LSP.textDocumentPublishDiagnostics, args => {
-            this.loadedTimer?.refresh()
-            this.diagnosticsMap.set(args.uri, args.diagnostics)
+            //this.diagnosticsMap.set(args.uri, args.diagnostics)
+            for (const diagnostic of args.diagnostics) {
+                this.diagnosticEvent.fire(
+                    Object.assign(diagnostic, { uri: args.uri })
+                )
+            }
         })
         this.connection.onNotification('workspace/codeLens/refresh', args => { })
         this.connection.onNotification('workspace/inlayHint/refresh', args => { })
@@ -119,7 +120,6 @@ export class LanguageClient {
     }
 
     async exit() {
-        this.loadedTimer?.close()
         await this.connection.sendNotification('exit')
         this.connection.end()
     }
