@@ -1,6 +1,6 @@
 {
     "name": "phpy",
-    "version": "0.0.3",
+    "version": "0.1.0",
     "description": "Devsense PHP Code Analysis CLI",
     "main": "dist/index.js",
     "bin": {
@@ -18,8 +18,7 @@
         "start": "npx tsx src/index.ts",
         "prepack": "clean-package",
         "postpack": "clean-package restore",
-        "build-wasm": "dotnet publish ../Devsense.PHP.CodeAnalysis/Devsense.PHP.CodeAnalysis.csproj",
-        "build": "npm run build-wasm && node build.js"
+        "build": "node build.js"
     },
     "author": "DEVSENSE",
     "license": "ISC",

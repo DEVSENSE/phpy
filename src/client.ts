@@ -99,7 +99,7 @@ export class LanguageClient {
                 'search.exclude': {},
                 'php.codeActions.enabled': false,
                 'phpTools.language': 'en',
-                'phpTools.heartBeatInterval': 100, // 100ms loadStatus interval
+                'phpTools.heartBeatInterval': 50, // 50ms loadStatus interval
                 'php.problems.exclude': {}, // { 'glob': [...ERR_CODEs] }
                 'php.problems.scope': 'all',
                 'php.stubs': ['all'],

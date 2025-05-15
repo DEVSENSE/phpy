@@ -85,7 +85,7 @@ async function main(argv: string[]) {
                     else {
                         let total = status.totalFiles * 2
                         let pending = (status.pendingAnalysis ?? 0) + (status.pendingParse ?? 0)
-                        progressBar.update((total - pending) / 2, total / 2)
+                        progressBar.update(total - pending, total)
                     }
                 })
             })
