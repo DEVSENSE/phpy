@@ -3,15 +3,16 @@ import { arch, platform } from 'os';
 import path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { EventEmitter } from './event';
-import { Devsense } from 'devsense-php-ls';
+//import { Devsense } from 'devsense-php-ls';
 
 namespace LSP {
 
     export interface DevsenseLoadStatus { totalFiles: number, pendingParse: number, pendingAnalysis: number, isLoadPending: boolean, }
-    export interface Diagnostic { uri?: string, range: any, code: string, message: string, severity: number, }
+    export interface Diagnostic { range: any, code: string, message: string, severity: number, }
 
     export const devsenseLoadStatus = new rpc.NotificationType<DevsenseLoadStatus>('devsense/loadStatus')
     export const initialize = new rpc.RequestType<any, any, any>('initialize')
+    export const workspaceDiagnostics = new rpc.RequestType<any, { uri: string, diagnostics: Diagnostic[] }[], any>('workspace/diagnostics')
     export const windowShowMessage = new rpc.NotificationType<{ message: string, type: 1 | 2 | 3 | 4 }>('window/showMessage')
     export const windowLogMessage = new rpc.NotificationType<{ message: string, type: 1 | 2 | 3 | 4 }>('window/logMessage')
     export const telemetryEvent = new rpc.NotificationType<{ event: string, exception: string, stack: string, data: any }>('telemetry/event')
@@ -29,18 +30,18 @@ export class LanguageClient {
         return this.loadStatusEvent.on(listener)
     }
 
-    public onDiagnostics(listener: (e: LSP.Diagnostic) => any): Disposable {
-        return this.diagnosticEvent.on(listener)
-    }
-
     private readonly loadStatusEvent: EventEmitter<LSP.DevsenseLoadStatus> = new EventEmitter<LSP.DevsenseLoadStatus>()
-    private readonly diagnosticEvent: EventEmitter<LSP.Diagnostic> = new EventEmitter<LSP.Diagnostic>()
+
+    public async diagnostics() {
+        return await this.connection.sendRequest(LSP.workspaceDiagnostics, null)
+    }
 
     constructor(
     ) {
-        //const lspath = Devsense.PHP.LS.languageServerPath()
+        //const lspath0 = Devsense.PHP.LS.languageServerPath()
         const lspath = `${__dirname}/../node_modules/devsense-php-ls-${platform()}-${arch()}/dist/devsense.php.ls.exe`
-        const lsprocess = spawn(path.resolve(lspath), [], {
+        //const lspath = "C:/Users/jmise/Projects/phptools-vscode/src/Devsense.PHP.LanguageServer/bin/Debug/net9.0/devsense.php.ls.exe"
+        const lsprocess = spawn(lspath ?? path.resolve(lspath), [], {
             shell: true,
             stdio: ['pipe', 'pipe', 'pipe', 'pipe']
         })
@@ -64,9 +65,6 @@ export class LanguageClient {
 
         this.connection.onNotification(LSP.devsenseLoadStatus, async (args) => {
             this.loadStatusEvent.fire(args)
-            if (args.isLoadPending == false && args.pendingAnalysis == 0 && args.pendingParse == 0) {
-                await this.connection.sendNotification('workspace/diagnostics')
-            }
         })
         this.connection.onNotification(LSP.windowShowMessage, args => {
             console.log(args)
@@ -78,11 +76,6 @@ export class LanguageClient {
         })
         this.connection.onNotification(LSP.textDocumentPublishDiagnostics, args => {
             //this.diagnosticsMap.set(args.uri, args.diagnostics)
-            for (const diagnostic of args.diagnostics) {
-                this.diagnosticEvent.fire(
-                    Object.assign(diagnostic, { uri: args.uri })
-                )
-            }
         })
         this.connection.onNotification('workspace/codeLens/refresh', args => { })
         this.connection.onNotification('workspace/inlayHint/refresh', args => { })
@@ -106,6 +99,7 @@ export class LanguageClient {
                 'search.exclude': {},
                 'php.codeActions.enabled': false,
                 'phpTools.language': 'en',
+                'phpTools.heartBeatInterval': 100, // 100ms loadStatus interval
                 'php.problems.exclude': {}, // { 'glob': [...ERR_CODEs] }
                 'php.problems.scope': 'all',
                 'php.stubs': ['all'],

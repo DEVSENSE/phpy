@@ -10,13 +10,13 @@ Install `phpy` package as a global command line tool:
 
 ## Sample usage
 
-_Analyze .php files in current directory:_
+_Analyze problems of `.php` files in current directory:_
 
 > phpy
 
-_Read `.php.` files in `src` and `vendor`, and analyze only files in `src`:_
+_Analyze `.php.` files in current folder, skipt the `tests` folder:
 
-> phpy --include "src" "vendor" -- "src"
+> phpy --root . --exclude tests
 
 ## List all options:
 

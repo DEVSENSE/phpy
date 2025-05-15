@@ -76,51 +76,39 @@ async function main(argv: string[]) {
 
             const client = new LanguageClient()
 
+            let progressBar = progress()
             const indexing = new Promise(resolve => {
-                let loadingProgressBar = progress()
                 let onLoadStatus = client.onLoadStatus(status => {
-                    if (status.isLoadPending == false && status.pendingAnalysis == 0 && status.pendingParse == 0) {
-                        loadingProgressBar.done()
+                    if (!status.isLoadPending && !status.pendingAnalysis && !status.pendingParse) {
                         resolve(true)
                     }
                     else {
-                        loadingProgressBar.update(
-                            status.totalFiles - Math.max(status.pendingAnalysis, status.pendingParse),
-                            status.totalFiles
-                        )
-                        //onLoadStatus[Symbol.dispose]()
+                        let total = status.totalFiles * 2
+                        let pending = (status.pendingAnalysis ?? 0) + (status.pendingParse ?? 0)
+                        progressBar.update((total - pending) / 2, total / 2)
                     }
                 })
-            })
-
-            let receiving = true
-            //let diagnostics = 0
-            client.onDiagnostics(diagnostic => {
-                receiving = true
-                //path.relative(root, file)
-                console.log(`${diagnostic.uri}(${diagnostic.range.start.line + 1}, ${diagnostic.range.start.character + 1}): ${diagnostic.message}`)
-                //diagnostics++
             })
 
             await client.start(root, options.include, options.exclude, '8.4')
             await indexing
 
-            // 
+            //
+            let diagnostics = await client.diagnostics()
 
-            setInterval(async () => {
+            progressBar.dispose() // remove progress bar
 
-                if (receiving) {
-                    receiving = false
-                }
-                else {
-                    //console.log(`${diagnostics} problem(s).`)
-                    await client.exit()
-                    process.exit(0)
-                }
-            }, 2000)
+            for (const b of diagnostics) {
+                for (const d of b.diagnostics)
+                    console.log(`${b.uri}(${d.range.start.line + 1}, ${d.range.start.character + 1}): ${d.message}`)
+
+            }
+
+            await client.exit()
+            process.exit(0)
         })
         .parseAsync(argv)
 }
 
 //
-main([...process.argv, '-r', 'D:/Documents/Projects/wpdotnet-sdk/wordpress/'])
+main([...process.argv, '-r', 'C:/Users/jmise/Projects/wpdotnet-sdk/wordpress'])
