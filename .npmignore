@@ -1,3 +1,5 @@
+.vscode
+.gitmodules
 src/**
 test/**
 obj/**

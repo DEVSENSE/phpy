@@ -10,7 +10,6 @@
         "remove": [
             "clean-package",
             "scripts",
-            "dependencies",
             "devDependencies"
         ]
     },
