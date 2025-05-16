@@ -6,6 +6,10 @@
     "bin": {
         "phpy": "dist/index.js"
     },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DEVSENSE/phpy.git"
+    },
     "clean-package": {
         "remove": [
             "clean-package",
