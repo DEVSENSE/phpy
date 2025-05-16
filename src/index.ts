@@ -1,33 +1,8 @@
 #! /usr/bin/env node
 
-import { Dirent, readFile } from 'fs';
-import { Glob, glob } from 'glob';
-import { minimatch } from 'minimatch';
 import { progress } from './progress';
-import { spawn } from 'child_process';
 import { program } from 'commander';
-import { arch, platform } from 'os';
-import path from 'path';
-import * as rpc from 'vscode-jsonrpc/node';
 import { LanguageClient } from './client';
-
-
-// async function globHelper(cwd: string, globs: string[], ignore: string[] | undefined, log: Logger, callback: (fullpath: string) => void) {
-//     const g = new Glob(
-//         globs,
-//         {
-//             cwd: cwd,
-//             withFileTypes: true,
-//             ignore: ignore
-//         }
-//     )
-
-//     for await (const ent of g.iterate()) {
-//         if (ent.isFile()) {
-//             callback(ent.fullpath())
-//         }
-//     }
-// }
 
 class Logger {
     constructor(
@@ -55,7 +30,7 @@ class Logger {
 async function main(argv: string[]) {
 
     await program
-        .version('0.0.3')
+        .version('0.1.0')
         .name('phpy')
         .description('PHP Code Analysis Tool')
         .showHelpAfterError(true)
@@ -111,4 +86,4 @@ async function main(argv: string[]) {
 }
 
 //
-main([...process.argv, '-r', 'C:/Users/jmise/Projects/wpdotnet-sdk/wordpress'])
+main(process.argv)
