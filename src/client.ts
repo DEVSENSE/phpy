@@ -3,14 +3,18 @@ import { arch, platform } from 'os';
 import path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { EventEmitter } from './event';
-//import { Devsense } from 'devsense-php-ls';
+//import * as DevsenseNode from 'devsense-php-ls-node';
+import * as DevsenseLS from 'devsense-php-ls';
+
+//import LSP = DevsenseNode.Devsense.LanguageServer.Protocol
+import LS = DevsenseLS.Devsense.PHP.LS;
 
 namespace LSP {
 
-    export interface DevsenseLoadStatus { totalFiles: number, pendingParse: number, pendingAnalysis: number, isLoadPending: boolean, }
+    export interface LoadStatusParams { totalFiles: number, pendingParse: number, pendingAnalysis: number, isLoadPending: boolean, }
     export interface Diagnostic { range: any, code: string, message: string, severity: number, }
 
-    export const devsenseLoadStatus = new rpc.NotificationType<DevsenseLoadStatus>('devsense/loadStatus')
+    export const devsenseLoadStatus = new rpc.NotificationType<LoadStatusParams>('devsense/loadStatus')
     export const initialize = new rpc.RequestType<any, any, any>('initialize')
     export const workspaceDiagnostics = new rpc.RequestType<any, { uri: string, diagnostics: Diagnostic[] }[], any>('workspace/diagnostics')
     export const windowShowMessage = new rpc.NotificationType<{ message: string, type: 1 | 2 | 3 | 4 }>('window/showMessage')
@@ -26,11 +30,11 @@ export class LanguageClient {
 
     private initresponse: any
 
-    public onLoadStatus(listener: (e: LSP.DevsenseLoadStatus) => any): Disposable {
+    public onLoadStatus(listener: (e: LSP.LoadStatusParams ) => any): Disposable {
         return this.loadStatusEvent.on(listener)
     }
 
-    private readonly loadStatusEvent: EventEmitter<LSP.DevsenseLoadStatus> = new EventEmitter<LSP.DevsenseLoadStatus>()
+    private readonly loadStatusEvent: EventEmitter<LSP.LoadStatusParams> = new EventEmitter<LSP.LoadStatusParams>()
 
     public async diagnostics() {
         return await this.connection.sendRequest(LSP.workspaceDiagnostics, null)
@@ -38,8 +42,8 @@ export class LanguageClient {
 
     constructor(
     ) {
-        //const lspath0 = Devsense.PHP.LS.languageServerPath()
-        const lspath = `${__dirname}/../node_modules/devsense-php-ls-${platform()}-${arch()}/dist/devsense.php.ls.exe`
+        const lspath = LS.languageServerPath()
+        //const lspath = `${__dirname}/../node_modules/devsense-php-ls-${platform()}-${arch()}/dist/devsense.php.ls.exe`
         //const lspath = "C:/Users/jmise/Projects/phptools-vscode/src/Devsense.PHP.LanguageServer/bin/Debug/net9.0/devsense.php.ls.exe"
         const lsprocess = spawn(lspath ?? path.resolve(lspath), [], {
             shell: true,
