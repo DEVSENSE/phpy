@@ -45,7 +45,9 @@ export class LanguageClient {
         const lspath = LS.languageServerPath()
         //const lspath = `${__dirname}/../node_modules/devsense-php-ls-${platform()}-${arch()}/dist/devsense.php.ls.exe`
         //const lspath = "C:/Users/jmise/Projects/phptools-vscode/src/Devsense.PHP.LanguageServer/bin/Debug/net9.0/devsense.php.ls.exe"
-        const lsprocess = spawn(lspath ?? path.resolve(lspath), [], {
+        const lsprocess = spawn(lspath ?? path.resolve(lspath), [
+            '--composerNodes', 'false', // disable lazy caching of packages in vendor
+        ], {
             shell: true,
             stdio: ['pipe', 'pipe', 'pipe', 'pipe']
         })
