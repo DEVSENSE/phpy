@@ -73,10 +73,10 @@ export class LanguageClient {
             this.loadStatusEvent.fire(args)
         })
         this.connection.onNotification(LSP.windowShowMessage, args => {
-            console.log(args)
+            //console.log(args)
         })
         this.connection.onNotification(LSP.windowLogMessage, args => {
-            console.log(args)
+            //console.log(args)
         })
         this.connection.onNotification(LSP.telemetryEvent, args => {
         })
