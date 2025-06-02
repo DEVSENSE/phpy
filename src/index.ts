@@ -49,7 +49,7 @@ async function main(argv: string[]) {
 
             log.info(`Starting ...`)
 
-            const client = new LanguageClientlog
+            const client = new LanguageClient()
 
             let progressBar = progress()
             const indexing = new Promise(resolve => {

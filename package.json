@@ -1,6 +1,6 @@
 {
     "name": "phpy",
-    "version": "1.0.17437",
+    "version": "1.0.17438",
     "description": "Devsense PHP Code Analysis CLI",
     "main": "dist/index.js",
     "bin": {
