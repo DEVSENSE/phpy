@@ -1,6 +1,6 @@
 {
     "name": "phpy",
-    "version": "1.0.17438",
+    "version": "1.0.17844",
     "description": "Devsense PHP Code Analysis CLI",
     "main": "dist/index.js",
     "bin": {
@@ -35,8 +35,8 @@
     ],
     "dependencies": {
         "commander": "^13.1.0",
-        "devsense-php-ls": "^1.0.17437",
-        "devsense-php-ls-node": "^1.0.17437",
+        "devsense-php-ls": "^1.0.17844",
+        "devsense-php-ls-node": "^1.0.17844",
         "glob": "^11.0.1",
         "minimatch": "^10.0.1",
         "vscode-jsonrpc": "^8.2.1"

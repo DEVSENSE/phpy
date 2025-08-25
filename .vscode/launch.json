@@ -13,7 +13,9 @@
             ],
             "console": "integratedTerminal",
             "args": [
-                "src/index.ts"
+                "src/index.ts",
+                "--check",
+                "--format"
             ],
             "name": "phpy",
             "skipFiles": [

@@ -12,11 +12,11 @@ Install `phpy` package as a global command line tool:
 
 _Analyze problems of `.php` files in current directory:_
 
-> phpy
+> phpy --check
 
 _Analyze `.php.` files in current folder, skipt the `tests` folder:
 
-> phpy --root . --exclude tests
+> phpy --check --root . --exclude tests
 
 ## List all options:
 

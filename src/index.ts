@@ -1,8 +1,9 @@
 #! /usr/bin/env node
 
 import { progress } from './progress';
-import { program } from 'commander';
+import { InvalidArgumentError, Option, program } from 'commander';
 import { LanguageClient } from './client';
+import { CodeStyles, DefaultCodeStyle } from './codestyles';
 
 class Logger {
     constructor(
@@ -30,15 +31,30 @@ class Logger {
 async function main(argv: string[]) {
 
     await program
-        .version('0.1.0')
+        .version('0.2.0')
         .name('phpy')
-        .description('PHP Code Analysis Tool')
+        .description('PHP Languge Server CLI')
         .showHelpAfterError(true)
         .option('-r, --root <path>', 'Root directory, to which are other parameters relative. Current working directory by default.')
         //.option('-i, --include <path...>', 'Files or directories (including sub-directories) to be indexed.', ['.'])
         .option('-x, --exclude <path...>', 'Files or directories to be excluded from indexing.')
         //.option('-c, --concurrency <N>', 'Number of files being read in parallel.', str => parseInt(str), DefaultConcurrency)
         //.option('--encoding <enc>', 'Encoding used for source files.', str => <BufferEncoding>str, 'utf-8')
+        .option('-c, --check', 'Perform code analysis and output list of problems.')
+        // .addOption(
+        //     new Option('-f, --format [CodeStyle]', 'Perform in-place code format.')
+        //     .choices(CodeStyles) // not used: overriden by argParser()
+        //     .default(DefaultCodeStyle) // not used: overriden
+        //     .argParser((value) => {
+        //         // match value to CodeStyles enum
+        //         const lower = value.replace('-', '').toLowerCase()
+        //         let idx = CodeStyles.findIndex((item) => item.toLowerCase() == lower)
+        //         if (idx < 0) {
+        //             throw new InvalidArgumentError(`Allowed choices are ${CodeStyles.join(', ')}.`)
+        //         }
+        //         return CodeStyles[idx]
+        //     })
+        // )
         .option('--verbose', 'Enable verbose output.')
         .argument('[path...]', 'Files or directories to be analyzed.')
         .action(async (paths: string[] | undefined, options) => {
@@ -65,18 +81,31 @@ async function main(argv: string[]) {
                 })
             })
 
-            await client.start(root, options.include, options.exclude, '8.4')
+            await client.start(
+                root,
+                options.include,
+                options.exclude,
+                '8.4',
+                typeof options.format == 'string' ? options.format : DefaultCodeStyle
+            )
             await indexing
 
             //
-            let diagnostics = await client.diagnostics()
+            if (options.format) {
+                
+            }
 
-            progressBar.dispose() // remove progress bar
+            //
+            if (options.check) {
+                let diagnostics = await client.diagnostics()
 
-            for (const b of diagnostics) {
-                for (const d of b.diagnostics)
-                    console.log(`${b.uri}(${d.range.start.line + 1}, ${d.range.start.character + 1}): ${d.message}`)
+                progressBar.dispose() // remove progress bar
 
+                for (const b of diagnostics) {
+                    for (const d of b.diagnostics)
+                        console.log(`${b.uri}(${d.range.start.line + 1}, ${d.range.start.character + 1}): ${d.message}`)
+
+                }
             }
 
             await client.exit()

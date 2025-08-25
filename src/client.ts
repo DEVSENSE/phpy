@@ -8,6 +8,7 @@ import * as DevsenseLS from 'devsense-php-ls';
 
 //import LSP = DevsenseNode.Devsense.LanguageServer.Protocol
 import LS = DevsenseLS.Devsense.PHP.LS;
+import { DefaultCodeStyle } from './codestyles';
 
 namespace LSP {
 
@@ -67,7 +68,7 @@ export class LanguageClient {
         )
     }
 
-    async start(root: string, include: string[], exclude: string[] | undefined, phpVersion: string = '8.4') {
+    async start(root: string, include: string[], exclude: string[] | undefined, phpVersion: string = '8.4', codeStyle = DefaultCodeStyle) {
 
         this.connection.onNotification(LSP.devsenseLoadStatus, async (args) => {
             this.loadStatusEvent.fire(args)
@@ -114,7 +115,7 @@ export class LanguageClient {
                 'php.cache.enableOnlineCache': false,
                 'php.codeLens.enabled': false,
                 'php.sortUses.caseSensitive': false,
-                'php.format.codeStyle': 'PSR-12',
+                'php.format.codeStyle': codeStyle,
             },
         })
     }
