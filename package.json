@@ -35,8 +35,8 @@
     ],
     "dependencies": {
         "commander": "^13.1.0",
-        "devsense-php-ls": "^1.0.17844",
-        "devsense-php-ls-node": "^1.0.17844",
+        "devsense-php-ls": "^1.0.17849",
+        "devsense-php-ls-node": "^1.0.17849",
         "glob": "^11.0.1",
         "minimatch": "^10.0.1",
         "vscode-jsonrpc": "^8.2.1"

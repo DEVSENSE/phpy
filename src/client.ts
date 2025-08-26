@@ -1,28 +1,52 @@
 import { spawn } from 'child_process';
-import { arch, platform } from 'os';
 import path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { EventEmitter } from './event';
-//import * as DevsenseNode from 'devsense-php-ls-node';
+import * as DevsenseNode from 'devsense-php-ls-node';
 import * as DevsenseLS from 'devsense-php-ls';
 
-//import LSP = DevsenseNode.Devsense.LanguageServer.Protocol
 import LS = DevsenseLS.Devsense.PHP.LS;
-import { DefaultCodeStyle } from './codestyles';
+import LSP1 = DevsenseNode.Devsense.LanguageServer.Protocol
 
-namespace LSP {
+import { DefaultCodeStyle } from './codestyles';
+import { TextDocument } from './textdocument';
+
+export namespace LSP {
 
     export interface LoadStatusParams { totalFiles: number, pendingParse: number, pendingAnalysis: number, isLoadPending: boolean, }
-    export interface Diagnostic { range: any, code: string, message: string, severity: number, }
+
+    export interface Position { line: number, character: number }
+    export interface Range { start: Position, end: Position }
+    export interface TextEdit { range: Range, newText: string }
+    export interface Diagnostic { range: Range, code: string, message: string, severity: number, }
+    export interface TextDocumentIdentifier { uri: string }
+    export interface TextDocumentItem extends TextDocumentIdentifier { languageId: string, version: number, text: string, }
+    export interface DocumentRangeFormattingParams { textDocument: TextDocumentIdentifier, range: Range, options: { tabSize: number, insertSpaces: boolean, trimTrailingWhitespace?: boolean, insertFinalNewline?: boolean, trimFinalNewlines?: boolean } }
+    export interface PhpDocumentRangeFormattingParams extends DocumentRangeFormattingParams { htmlEdits: TextEdit[] }
 
     export const devsenseLoadStatus = new rpc.NotificationType<LoadStatusParams>('devsense/loadStatus')
+    export const devsenseRangeFormat = new rpc.RequestType<PhpDocumentRangeFormattingParams, TextEdit[], any>('devsense/phpRangeFormatting')
+
     export const initialize = new rpc.RequestType<any, any, any>('initialize')
     export const workspaceDiagnostics = new rpc.RequestType<any, { uri: string, diagnostics: Diagnostic[] }[], any>('workspace/diagnostics')
     export const windowShowMessage = new rpc.NotificationType<{ message: string, type: 1 | 2 | 3 | 4 }>('window/showMessage')
     export const windowLogMessage = new rpc.NotificationType<{ message: string, type: 1 | 2 | 3 | 4 }>('window/logMessage')
     export const telemetryEvent = new rpc.NotificationType<{ event: string, exception: string, stack: string, data: any }>('telemetry/event')
     export const textDocumentPublishDiagnostics = new rpc.NotificationType<{ uri: string, diagnostics: Diagnostic[] }>('textDocument/publishDiagnostics')
+    export const textDocumentDidOpen = new rpc.NotificationType<{ textDocument: TextDocumentItem }>('textDocument/didOpen')
+    export const textDocumentDidClose = new rpc.NotificationType<{ textDocument: TextDocumentItem }>('textDocument/didClose')
 
+}
+
+namespace Convert {
+    export function toTextDocumentItem(doc: TextDocument) {
+        return {
+            uri: doc.uri,
+            languageId: doc.langId,
+            version: 0,
+            text: doc.content
+        }
+    }
 }
 
 export class LanguageClient {
@@ -31,7 +55,9 @@ export class LanguageClient {
 
     private initresponse: any
 
-    public onLoadStatus(listener: (e: LSP.LoadStatusParams ) => any): Disposable {
+    private readonly documents = new Map<string, TextDocument>()
+
+    public onLoadStatus(listener: (e: LSP.LoadStatusParams) => any): Disposable {
         return this.loadStatusEvent.on(listener)
     }
 
@@ -39,6 +65,62 @@ export class LanguageClient {
 
     public async diagnostics() {
         return await this.connection.sendRequest(LSP.workspaceDiagnostics, null)
+    }
+
+    public async listDocuments()/*: Promise<TextDocumentIdentifier[]>*/ {
+        return await this.connection.sendRequest(LSP1.devsenseListProjectFiles, null)
+    }
+
+    public async openDocument(uri: string, langId: 'php'): Promise<TextDocument> {
+        var doc = TextDocument.fromUri(uri, langId)
+        
+        await this.connection.sendNotification(LSP.textDocumentDidOpen, {
+            textDocument: Convert.toTextDocumentItem(doc)
+        })
+
+        this.documents.set(doc.uri, doc)
+
+        //
+        return doc
+    }
+
+    public async closeDocument(uri: string) {
+        var doc = this.documents.get(uri)
+        if (doc == undefined)
+            return;
+
+        await this.connection.sendNotification(LSP.textDocumentDidClose, {
+            textDocument: Convert.toTextDocumentItem(doc)
+        })
+
+        this.documents.delete(doc.uri)
+
+        //
+        return doc
+    }
+
+    public async rangeFormat(doc: TextDocument, range?: LSP.Range, htmlEdits?: LSP.TextEdit[]): Promise<TextDocument> {
+
+        const p: LSP.PhpDocumentRangeFormattingParams = {
+            htmlEdits: htmlEdits ?? [],
+            textDocument: { uri: doc.uri },
+            range: range ?? {
+                start: { line: 0, character: 0 },
+                end: { line: doc.lineCount - 1, character: Number.MAX_SAFE_INTEGER }
+            },
+            options: {
+                tabSize: 4,
+                insertSpaces: true,
+            }
+        }
+
+        //
+        let edits = await this.connection.sendRequest(LSP.devsenseRangeFormat, p)
+        let newdoc = doc.withEdits(edits)
+
+        //
+        this.documents.set(newdoc.uri, newdoc)
+        return newdoc
     }
 
     constructor(

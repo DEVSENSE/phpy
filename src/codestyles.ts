@@ -1,10 +1,10 @@
 export const DefaultCodeStyle = 'PSR12';
 
 export const CodeStyles: string[] = [
-    // /// <summary>
-    // /// Formatting is disabled.
-    // /// </summary>
-    // "Off",
+    /// <summary>
+    /// Formatting is disabled.
+    /// </summary>
+    "Off",
 
     /// <summary>
     /// Default PHP Tools for Visual Studio compliant formatting.

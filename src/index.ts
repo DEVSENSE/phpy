@@ -4,6 +4,7 @@ import { progress } from './progress';
 import { InvalidArgumentError, Option, program } from 'commander';
 import { LanguageClient } from './client';
 import { CodeStyles, DefaultCodeStyle } from './codestyles';
+import { TextDocument } from './textdocument';
 
 class Logger {
     constructor(
@@ -41,20 +42,20 @@ async function main(argv: string[]) {
         //.option('-c, --concurrency <N>', 'Number of files being read in parallel.', str => parseInt(str), DefaultConcurrency)
         //.option('--encoding <enc>', 'Encoding used for source files.', str => <BufferEncoding>str, 'utf-8')
         .option('-c, --check', 'Perform code analysis and output list of problems.')
-        // .addOption(
-        //     new Option('-f, --format [CodeStyle]', 'Perform in-place code format.')
-        //     .choices(CodeStyles) // not used: overriden by argParser()
-        //     .default(DefaultCodeStyle) // not used: overriden
-        //     .argParser((value) => {
-        //         // match value to CodeStyles enum
-        //         const lower = value.replace('-', '').toLowerCase()
-        //         let idx = CodeStyles.findIndex((item) => item.toLowerCase() == lower)
-        //         if (idx < 0) {
-        //             throw new InvalidArgumentError(`Allowed choices are ${CodeStyles.join(', ')}.`)
-        //         }
-        //         return CodeStyles[idx]
-        //     })
-        // )
+        .addOption(
+            new Option('-f, --format [CodeStyle]', 'Perform in-place code format.')
+            .choices(CodeStyles) // not used: overriden by argParser()
+            .default(DefaultCodeStyle) // not used: overriden
+            .argParser((value) => {
+                // match value to CodeStyles enum
+                const lower = value.replace('-', '').toLowerCase()
+                let idx = CodeStyles.findIndex((item) => item.toLowerCase() == lower)
+                if (idx < 0) {
+                    throw new InvalidArgumentError(`Allowed choices are ${CodeStyles.join(', ')}.`)
+                }
+                return CodeStyles[idx]
+            })
+        )
         .option('--verbose', 'Enable verbose output.')
         .argument('[path...]', 'Files or directories to be analyzed.')
         .action(async (paths: string[] | undefined, options) => {
@@ -83,7 +84,7 @@ async function main(argv: string[]) {
 
             await client.start(
                 root,
-                options.include,
+                paths ?? ['**/*.php'],
                 options.exclude,
                 '8.4',
                 typeof options.format == 'string' ? options.format : DefaultCodeStyle
@@ -92,7 +93,18 @@ async function main(argv: string[]) {
 
             //
             if (options.format) {
-                
+                var docIds = await client.listDocuments()
+                for (const id of docIds) {
+                    const doc = await client.openDocument(id.uri, 'php')
+                    const newdoc = await client.rangeFormat(doc)
+                    if (newdoc.version != doc.version && newdoc.content != doc.content) {
+                        log.info(`Saving formatted document '${newdoc.uri}' ...`)
+                        newdoc.save(newdoc.uri)
+                    }
+
+                    //
+                    client.closeDocument(newdoc.uri)
+                }
             }
 
             //
