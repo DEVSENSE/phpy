@@ -14,7 +14,7 @@ _Analyze problems of `.php` files in current directory:_
 
 > phpy --check
 
-_Analyze `.php.` files in current folder, skipt the `tests` folder:
+_Analyze `.php` files in current folder, skipt the `tests` folder:_
 
 > phpy --check --root . --exclude tests
 
