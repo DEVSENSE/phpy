@@ -45,7 +45,6 @@ async function main(argv: string[]) {
         .addOption(
             new Option('-f, --format [CodeStyle]', 'Perform in-place code format.')
             .choices(CodeStyles) // not used: overriden by argParser()
-            .default(DefaultCodeStyle) // not used: overriden
             .argParser((value) => {
                 // match value to CodeStyles enum
                 const lower = value.replace('-', '').toLowerCase()
