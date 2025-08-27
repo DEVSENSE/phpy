@@ -1,6 +1,6 @@
 # PHP Code Analysis Tool
 
-Standalone NodeJS command-line utility for analyzing PHP code files.
+Standalone NodeJS command-line utility for analyzing and formatting PHP files.
 
 ## Installation
 
@@ -18,9 +18,30 @@ _Analyze `.php.` files in current folder, skipt the `tests` folder:
 
 > phpy --check --root . --exclude tests
 
-## List all options:
+_Format all `.php` files in directory using "Laravel" coding style:_
 
-> phpy --help
+> phpy --format Laravel
+
+## Available options
+
+```
+Usage: phpy [options] [path...]
+
+PHP Languge Server CLI
+
+Arguments:
+  path                      Files or directories to be analyzed.
+
+Options:
+  -V, --version             output the version number
+  -r, --root <path>         Root directory, to which are other parameters relative. Current working directory by default.
+  -x, --exclude <path...>   Files or directories to be excluded from indexing.
+  -c, --check               Perform code analysis and output list of problems.
+  -f, --format [CodeStyle]  Perform in-place code format. (choices: "Off", "PHPTools", "PSR2", "WordPress", "Allman", "KaR", "PSR12",
+                            "Laravel", "Drupal", "Joomla", "PER", default: "PSR12")
+  --verbose                 Enable verbose output.
+  -h, --help                display help for command
+```
 
 ## Background
 
