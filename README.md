@@ -1,4 +1,4 @@
-# PHP Code Analysis Tool
+# Devsense' PHP CLI Tools 
 
 Standalone NodeJS command-line utility for analyzing and formatting PHP files.
 
