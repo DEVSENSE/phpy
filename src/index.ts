@@ -95,15 +95,24 @@ async function main(argv: string[]) {
             if (options.format) {
                 var docIds = await client.listDocuments()
                 for (const id of docIds) {
-                    const doc = await client.openDocument(id.uri, 'php')
-                    const newdoc = await client.rangeFormat(doc)
-                    if (newdoc.version != doc.version && newdoc.content != doc.content) {
-                        log.info(`Saving formatted document '${newdoc.uri}' ...`)
-                        newdoc.save(newdoc.uri)
-                    }
-
                     //
-                    client.closeDocument(newdoc.uri)
+                    log.info(`Formatting document '${id.uri}' ...`)
+                    const doc = await client.openDocument(id.uri, 'php')
+                    try {
+                        //
+                        const newdoc = await client.rangeFormat(doc)
+                        if (newdoc.version != doc.version && newdoc.content != doc.content) {
+                            log.info(`Saving formatted document '${newdoc.uri}' ...`)
+                            newdoc.save(newdoc.uri)
+                        }
+                    }
+                    catch (e) {
+                        log.error(<Error>e)
+                    }
+                    finally {
+                        //
+                        client.closeDocument(doc.uri)
+                    }
                 }
             }
 
@@ -116,7 +125,6 @@ async function main(argv: string[]) {
                 for (const b of diagnostics) {
                     for (const d of b.diagnostics)
                         console.log(`${b.uri}(${d.range.start.line + 1}, ${d.range.start.character + 1}): ${d.message}`)
-
                 }
             }
 

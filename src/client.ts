@@ -21,7 +21,7 @@ export namespace LSP {
     export interface Diagnostic { range: Range, code: string, message: string, severity: number, }
     export interface TextDocumentIdentifier { uri: string }
     export interface TextDocumentItem extends TextDocumentIdentifier { languageId: string, version: number, text: string, }
-    export interface DocumentRangeFormattingParams { textDocument: TextDocumentIdentifier, range: Range, options: { tabSize: number, insertSpaces: boolean, trimTrailingWhitespace?: boolean, insertFinalNewline?: boolean, trimFinalNewlines?: boolean } }
+    export interface DocumentRangeFormattingParams { textDocument: TextDocumentIdentifier, range: Range, options?: { tabSize: number, insertSpaces: boolean, trimTrailingWhitespace?: boolean, insertFinalNewline?: boolean, trimFinalNewlines?: boolean } }
     export interface PhpDocumentRangeFormattingParams extends DocumentRangeFormattingParams { htmlEdits: TextEdit[] }
 
     export const devsenseLoadStatus = new rpc.NotificationType<LoadStatusParams>('devsense/loadStatus')
@@ -107,10 +107,6 @@ export class LanguageClient {
             range: range ?? {
                 start: { line: 0, character: 0 },
                 end: { line: doc.lineCount - 1, character: Number.MAX_SAFE_INTEGER }
-            },
-            options: {
-                tabSize: 4,
-                insertSpaces: true,
             }
         }
 
