@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "fs";
 import { LSP } from "./client";
 import { compare } from "./math";
+import { fileURLToPath } from 'url';
 
 export class TextDocument {
 
@@ -40,25 +41,30 @@ export class TextDocument {
     }
 
     static fromUri(uriString: string, langId: 'php'): TextDocument {
-        let uri = URL.parse(uriString)
-        if (uri == null) {
-            throw new Error(`Invalid URI '${uriString}'`)
-        }
+        try {
+            const filePath = fileURLToPath(uriString);
 
-        return new TextDocument(
-            uriString,
-            readFileSync(uri.pathname, { encoding: 'utf8' }),
-            langId,
-            0
-        )
+            return new TextDocument(
+                uriString,
+                readFileSync(filePath, { encoding: 'utf8' }),
+                langId,
+                0
+            );
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            throw new Error(`Failed to process ${uriString}. Error: ${errorMessage}`);
+        }
     }
 
     save(uriString: string) {
-        let uri = URL.parse(uriString)
-        if (uri == null) {
-            throw new Error(`Invalid URI '${uriString}'`)
+        try {
+            const filePath = fileURLToPath(uriString);
+
+            writeFileSync(filePath, this.content, { encoding: 'utf8' });
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            throw new Error(`Failed to save to ${uriString}: ${errorMessage}`);
         }
-        writeFileSync(uri.pathname, this.content, { encoding: 'utf8', })
     }
 
     private getLineSpan(lineNo: number): { start: number, length: number }|undefined {
