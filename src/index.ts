@@ -66,7 +66,7 @@ async function main(argv: string[]) {
 
             log.info(`Starting ...`)
 
-            const client = new LanguageClient()
+            const client = new LanguageClient(options.parallelism, true)
 
             let progressBar = progress()
             const indexing = new Promise(resolve => {
