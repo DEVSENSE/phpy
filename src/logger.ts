@@ -1,7 +1,8 @@
 
 export class Logger {
     constructor(
-        private readonly verbose: boolean
+        private readonly verbose: boolean,
+        private readonly logToStderr: boolean = false
     ) {
     }
 
@@ -11,7 +12,8 @@ export class Logger {
 
     info(text: string) {
         if (this.verbose) {
-            process.stdout.write(`[${new Date().toISOString()}] ${text}\n`)
+            const out = this.logToStderr ? process.stderr : process.stdout;
+            out.write(`[${new Date().toISOString()}] ${text}\n`)
         }
     }
 

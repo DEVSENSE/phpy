@@ -9,7 +9,7 @@ function formatTime(ms: number): string {
     return m > 0 ? `${m}m ${remainingSeconds}s` : `${remainingSeconds}s`;
 }
 
-export function progress() {
+export function progress(stream: NodeJS.WriteStream = process.stdout) {
     const startTime = Date.now();
     let disposed = false
 
@@ -27,16 +27,16 @@ export function progress() {
 
             const spinner = spinnerFrames[Math.floor(completed * spinnerFrames.length) % spinnerFrames.length];
             const progressLine = `${spinner} ${completed}/${total} completed | ⏱️ ${formatTime(elapsed)} elapsed | ⌛ ~${formatTime(estimatedTotal)} total`;
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0);
-            process.stdout.write(progressLine);
+            readline.clearLine(stream, 0);
+            readline.cursorTo(stream, 0);
+            stream.write(progressLine);
         },
         done() {
             if (disposed) {
                 return
             }
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0);
+            readline.clearLine(stream, 0);
+            readline.cursorTo(stream, 0);
         },
         dispose() {
             this.done()
